@@ -7,9 +7,11 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { beforeAll, describe, expect, test } from 'vitest'
-import { KillswitchClient, KillswitchFactory } from '../artifacts/killswitch/KillswitchClient'
+import { KillswitchClient } from '../artifacts/killswitch/KillswitchClient'
 import type { WithdrawalRequest } from '../artifacts/main/MainClient'
-import { MainClient, MainFactory } from '../artifacts/main/MainClient'
+import { MainClient } from '../artifacts/main/MainClient'
+import { deploy as deployKillswitch } from '../killswitch/deploy-config'
+import { deploy as deployMain } from './deploy-config'
 
 const testDir = dirname(fileURLToPath(import.meta.url))
 
@@ -91,43 +93,23 @@ describe('Auto-Draw Card', () => {
       amount: 100_000_000n,
     })
 
-    // Deploy the Main contract directly
-    const factory = algorand.client.getTypedAppFactory(MainFactory, {
-      defaultSender: owner.addr,
+    // Deploy the Main contract via the shared deploy-config
+    appClient = await deployMain({
+      algorand,
+      deployer: owner.addr,
+      owner: owner.addr.toString(),
+      omnibus: omnibus.addr.toString(),
+      fundAmount: AlgoAmount.MicroAlgos(10_000_000),
     })
 
-    const deployment = await factory.send.create.deploy({
-      args: [owner.addr.toString(), omnibus.addr.toString()],
-      extraProgramPages: 3,
-      schema: {
-        globalInts: 32,
-        globalByteSlices: 32,
-        localInts: 8,
-        localByteSlices: 8,
-      },
+    // Deploy the Killswitch contract (used by the AutoDraw delegation flow) via its deploy-config
+    ksClient = await deployKillswitch({
+      algorand,
+      deployer: owner.addr,
+      owner: owner.addr.toString(),
+      mainAppId: appClient.appId,
+      fundAmount: AlgoAmount.MicroAlgos(200_000),
     })
-    appClient = deployment.appClient
-
-    // Fund the app account so the owner pre-funds all box MBR and account minimum balances
-    await appClient.appClient.fundAppAccount({ amount: AlgoAmount.MicroAlgos(10_000_000) })
-
-    // Deploy the Killswitch contract (used by the AutoDraw delegation flow)
-    const ksFactory = algorand.client.getTypedAppFactory(KillswitchFactory, {
-      defaultSender: owner.addr,
-    })
-    const ksDeployment = await ksFactory.send.create.deploy({
-      args: [owner.addr.toString(), appClient.appId],
-      schema: {
-        globalInts: 8,
-        globalByteSlices: 8,
-        localInts: 0,
-        localByteSlices: 0,
-      },
-    })
-    ksClient = ksDeployment.appClient
-
-    // Fund Killswitch app for box MBR (2_500 + 400 * (32 + 8) = 18_500 per enabled account)
-    await ksClient.appClient.fundAppAccount({ amount: AlgoAmount.MicroAlgos(200_000) })
   })
 
   /**
