@@ -1,0 +1,1027 @@
+{
+  "version": 3,
+  "sources": [
+    "../../auto_draw/contract.algo.ts"
+  ],
+  "mappings": "AA0C2C;;AAAiB;AAAjB;AACD;;AAAiB;AAAjB;AAIpC;;AAAgB;;AAAhB;AAAA;;;AACA;;AAAqB;;AAArB;AADA;;;AAEA;;AAAuB;AAAvB;AAFA;;;AAIA;;AAAiB;;AAAjB;AAJA;;;AAKA;;AAAkB;;AAAlB;AALA;;;AAMA;;AANA;;;AAQA;;AAAA;;AAAuB;AAAvB;AARA;;;AASA;;AAAA;;AAAwB;;AAAxB;AATA;;;AAUA;;AAAsB;AAAtB;;AAA6B;;;;;;AAA7B;AAVA;;;AAWA;;AAAsB;AAAtB;;AAA6B;;AAA7B;AAXA;;;AAaA;AAAA;;AAAsB;AAAtB;AAbA;;;AAcA;AAAA;;AAAuB;;AAAvB;AAdA;;;AAeA;AAAqB;AAArB;;AAA4B;;;;;;AAA5B;AAfA;;;AAgBA;;AAA4B;;AAAqB;AAArB;;AAA5B;AAhBA;;;AAiBA;;AAA6B;;AAAqB;AAArB;;AAAR;AAArB;AAjBA;;;AAkBA;;AAA2B;;AAAqB;;AAArB;;AAAR;AAAnB;AAlBA;;;;AAFF;;AAAA",
+  "op_pc_offset": 2,
+  "pc_events": {
+    "0": {
+      "op": "txn GroupIndex",
+      "defined_out": [
+        "tmp%0#0"
+      ],
+      "stack_out": [
+        "tmp%0#0"
+      ]
+    },
+    "2": {
+      "op": "intc_0 // 1",
+      "defined_out": [
+        "1",
+        "tmp%0#0"
+      ],
+      "stack_out": [
+        "tmp%0#0",
+        "1"
+      ]
+    },
+    "3": {
+      "op": "+",
+      "defined_out": [
+        "txnKillswitch#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0"
+      ]
+    },
+    "4": {
+      "op": "txn GroupIndex",
+      "defined_out": [
+        "tmp%1#0",
+        "txnKillswitch#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "tmp%1#0"
+      ]
+    },
+    "6": {
+      "op": "intc_2 // 2",
+      "defined_out": [
+        "2",
+        "tmp%1#0",
+        "txnKillswitch#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "tmp%1#0",
+        "2"
+      ]
+    },
+    "7": {
+      "op": "+",
+      "defined_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "8": {
+      "op": "txn RekeyTo",
+      "defined_out": [
+        "tmp%2#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%2#0"
+      ]
+    },
+    "10": {
+      "op": "global ZeroAddress",
+      "defined_out": [
+        "tmp%2#0",
+        "tmp%3#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%2#0",
+        "tmp%3#0"
+      ]
+    },
+    "12": {
+      "op": "==",
+      "defined_out": [
+        "tmp%4#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%4#0"
+      ]
+    },
+    "13": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "16": {
+      "op": "txn AssetCloseTo",
+      "defined_out": [
+        "tmp%5#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%5#0"
+      ]
+    },
+    "18": {
+      "op": "global ZeroAddress",
+      "defined_out": [
+        "tmp%5#0",
+        "tmp%6#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%5#0",
+        "tmp%6#0"
+      ]
+    },
+    "20": {
+      "op": "==",
+      "defined_out": [
+        "tmp%7#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%7#0"
+      ]
+    },
+    "21": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "24": {
+      "op": "global GenesisHash",
+      "defined_out": [
+        "tmp%8#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%8#0"
+      ]
+    },
+    "26": {
+      "op": "bytec_0 // TMPL_GENESIS_HASH",
+      "defined_out": [
+        "TMPL_GENESIS_HASH",
+        "tmp%8#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%8#0",
+        "TMPL_GENESIS_HASH"
+      ]
+    },
+    "27": {
+      "op": "==",
+      "defined_out": [
+        "tmp%9#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%9#0"
+      ]
+    },
+    "28": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "31": {
+      "op": "txn TypeEnum",
+      "defined_out": [
+        "tmp%10#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%10#0"
+      ]
+    },
+    "33": {
+      "op": "pushint 4 // 4",
+      "defined_out": [
+        "4",
+        "tmp%10#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%10#0",
+        "4"
+      ]
+    },
+    "35": {
+      "op": "==",
+      "defined_out": [
+        "tmp%11#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%11#0"
+      ]
+    },
+    "36": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "39": {
+      "op": "txn XferAsset",
+      "defined_out": [
+        "tmp%12#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%12#0"
+      ]
+    },
+    "41": {
+      "op": "intc 4 // TMPL_ASSET",
+      "defined_out": [
+        "TMPL_ASSET",
+        "tmp%12#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%12#0",
+        "TMPL_ASSET"
+      ]
+    },
+    "43": {
+      "op": "==",
+      "defined_out": [
+        "tmp%13#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%13#0"
+      ]
+    },
+    "44": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "47": {
+      "op": "txn Fee",
+      "defined_out": [
+        "tmp%14#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%14#0"
+      ]
+    },
+    "49": {
+      "op": "bnz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "52": {
+      "op": "dig 1",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "txnKillswitch#0"
+      ]
+    },
+    "54": {
+      "op": "gtxns TypeEnum",
+      "defined_out": [
+        "tmp%16#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%16#0"
+      ]
+    },
+    "56": {
+      "op": "intc_3 // 6",
+      "defined_out": [
+        "6",
+        "tmp%16#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%16#0",
+        "6"
+      ]
+    },
+    "57": {
+      "op": "==",
+      "defined_out": [
+        "tmp%17#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%17#0"
+      ]
+    },
+    "58": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "61": {
+      "op": "dig 1",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "txnKillswitch#0"
+      ]
+    },
+    "63": {
+      "op": "gtxns ApplicationID",
+      "defined_out": [
+        "tmp%18#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%18#0"
+      ]
+    },
+    "65": {
+      "op": "intc 5 // TMPL_KILLSWITCH_APP",
+      "defined_out": [
+        "TMPL_KILLSWITCH_APP",
+        "tmp%18#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%18#0",
+        "TMPL_KILLSWITCH_APP"
+      ]
+    },
+    "67": {
+      "op": "==",
+      "defined_out": [
+        "tmp%19#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%19#0"
+      ]
+    },
+    "68": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "71": {
+      "op": "dig 1",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "txnKillswitch#0"
+      ]
+    },
+    "73": {
+      "op": "intc_1 // 0",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "txnKillswitch#0",
+        "0"
+      ]
+    },
+    "74": {
+      "op": "gtxnsas ApplicationArgs",
+      "defined_out": [
+        "tmp%20#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%20#0"
+      ]
+    },
+    "76": {
+      "op": "pushbytes 0x73bc6501 // method \"authorize(address)void\"",
+      "defined_out": [
+        "Method(authorize(address)void)",
+        "tmp%20#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%20#0",
+        "Method(authorize(address)void)"
+      ]
+    },
+    "82": {
+      "op": "==",
+      "defined_out": [
+        "tmp%21#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%21#0"
+      ]
+    },
+    "83": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "86": {
+      "op": "dig 1",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "txnKillswitch#0"
+      ]
+    },
+    "88": {
+      "op": "intc_0 // 1",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "txnKillswitch#0",
+        "1"
+      ]
+    },
+    "89": {
+      "op": "gtxnsas ApplicationArgs",
+      "defined_out": [
+        "tmp%22#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%22#0"
+      ]
+    },
+    "91": {
+      "op": "txn Sender",
+      "defined_out": [
+        "reinterpret_bytes[32]%0#0",
+        "tmp%22#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%22#0",
+        "reinterpret_bytes[32]%0#0"
+      ]
+    },
+    "93": {
+      "op": "==",
+      "defined_out": [
+        "tmp%23#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%23#0"
+      ]
+    },
+    "94": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "97": {
+      "op": "dup",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "98": {
+      "op": "gtxns TypeEnum",
+      "defined_out": [
+        "tmp%24#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%24#0"
+      ]
+    },
+    "100": {
+      "op": "intc_3 // 6",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%24#0",
+        "6"
+      ]
+    },
+    "101": {
+      "op": "==",
+      "defined_out": [
+        "tmp%25#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%25#0"
+      ]
+    },
+    "102": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "105": {
+      "op": "dup",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "106": {
+      "op": "gtxns ApplicationID",
+      "defined_out": [
+        "tmp%26#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%26#0"
+      ]
+    },
+    "108": {
+      "op": "intc 6 // TMPL_MAIN_APP",
+      "defined_out": [
+        "TMPL_MAIN_APP",
+        "tmp%26#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%26#0",
+        "TMPL_MAIN_APP"
+      ]
+    },
+    "110": {
+      "op": "==",
+      "defined_out": [
+        "tmp%27#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%27#0"
+      ]
+    },
+    "111": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "114": {
+      "op": "dup",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "115": {
+      "op": "intc_1 // 0",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "txnMainDebit#0",
+        "0"
+      ]
+    },
+    "116": {
+      "op": "gtxnsas ApplicationArgs",
+      "defined_out": [
+        "tmp%28#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%28#0"
+      ]
+    },
+    "118": {
+      "op": "pushbytes 0xd3c7a652 // method \"cardDebit(address,uint64,uint64,uint64,string)void\"",
+      "defined_out": [
+        "Method(cardDebit(address,uint64,uint64,uint64,string)void)",
+        "tmp%28#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%28#0",
+        "Method(cardDebit(address,uint64,uint64,uint64,string)void)"
+      ]
+    },
+    "124": {
+      "op": "==",
+      "defined_out": [
+        "tmp%29#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%29#0"
+      ]
+    },
+    "125": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "128": {
+      "op": "txn AssetReceiver",
+      "defined_out": [
+        "reinterpret_bytes[32]%1#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "reinterpret_bytes[32]%1#0"
+      ]
+    },
+    "130": {
+      "op": "dig 1",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "reinterpret_bytes[32]%1#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "132": {
+      "op": "intc_0 // 1",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "reinterpret_bytes[32]%1#0",
+        "txnMainDebit#0",
+        "1"
+      ]
+    },
+    "133": {
+      "op": "gtxnsas ApplicationArgs",
+      "defined_out": [
+        "reinterpret_bytes[32]%1#0",
+        "tmp%30#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "reinterpret_bytes[32]%1#0",
+        "tmp%30#0"
+      ]
+    },
+    "135": {
+      "op": "==",
+      "defined_out": [
+        "tmp%31#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%31#0"
+      ]
+    },
+    "136": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "139": {
+      "op": "txn XferAsset",
+      "defined_out": [
+        "tmp%32#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%32#0"
+      ]
+    },
+    "141": {
+      "op": "dig 1",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%32#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "143": {
+      "op": "intc_2 // 2",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%32#0",
+        "txnMainDebit#0",
+        "2"
+      ]
+    },
+    "144": {
+      "op": "gtxnsas ApplicationArgs",
+      "defined_out": [
+        "tmp%32#0",
+        "tmp%33#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%32#0",
+        "tmp%33#0"
+      ]
+    },
+    "146": {
+      "op": "btoi",
+      "defined_out": [
+        "tmp%32#0",
+        "tmp%34#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%32#0",
+        "tmp%34#0"
+      ]
+    },
+    "147": {
+      "op": "==",
+      "defined_out": [
+        "tmp%35#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%35#0"
+      ]
+    },
+    "148": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "151": {
+      "op": "txn AssetAmount",
+      "defined_out": [
+        "tmp%36#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%36#0"
+      ]
+    },
+    "153": {
+      "op": "dig 1",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%36#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "155": {
+      "op": "pushint 3 // 3",
+      "defined_out": [
+        "3",
+        "tmp%36#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%36#0",
+        "txnMainDebit#0",
+        "3"
+      ]
+    },
+    "157": {
+      "op": "gtxnsas ApplicationArgs",
+      "defined_out": [
+        "tmp%36#0",
+        "tmp%37#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%36#0",
+        "tmp%37#0"
+      ]
+    },
+    "159": {
+      "op": "btoi",
+      "defined_out": [
+        "tmp%36#0",
+        "tmp%38#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%36#0",
+        "tmp%38#0"
+      ]
+    },
+    "160": {
+      "op": "<=",
+      "defined_out": [
+        "tmp%39#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "tmp%39#0"
+      ]
+    },
+    "161": {
+      "op": "bz main_bool_false@17",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "164": {
+      "op": "intc_0 // 1",
+      "defined_out": [
+        "and_result%0#0",
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "and_result%0#0"
+      ]
+    },
+    "165": {
+      "op": "return",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    },
+    "166": {
+      "block": "main_bool_false@17",
+      "stack_in": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ],
+      "op": "intc_1 // 0",
+      "defined_out": [
+        "and_result%0#0"
+      ],
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0",
+        "and_result%0#0"
+      ]
+    },
+    "167": {
+      "op": "return",
+      "stack_out": [
+        "txnKillswitch#0",
+        "txnMainDebit#0"
+      ]
+    }
+  }
+}
