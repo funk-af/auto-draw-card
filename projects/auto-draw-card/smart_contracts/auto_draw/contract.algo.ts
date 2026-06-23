@@ -30,6 +30,7 @@ import {
   Global,
   gtxn,
   LogicSig,
+  OnCompleteAction,
   op,
   TemplateVar,
   TransactionType,
@@ -56,11 +57,13 @@ export class AutoDraw extends LogicSig {
       txnKillswitch.type === TransactionType.ApplicationCall &&
       txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
       txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
+      txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
       txnKillswitch.appArgs(1) === Txn.sender.bytes &&
       // Enforce the second next transaction is a Main call
       txnMainDebit.type === TransactionType.ApplicationCall &&
       txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
       txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
+      txnMainDebit.onCompletion === OnCompleteAction.NoOp &&
       Txn.assetReceiver.bytes === txnMainDebit.appArgs(1) &&
       Txn.xferAsset.id === op.btoi(txnMainDebit.appArgs(2)) &&
       Txn.assetAmount <= op.btoi(txnMainDebit.appArgs(3))
