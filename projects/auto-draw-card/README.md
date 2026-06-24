@@ -134,19 +134,19 @@ Opt the caller in to AutoDraw delegation. The caller must pass a `card` address 
 
 Opt the caller out of AutoDraw delegation, deleting their `accounts` box. Fails if not currently enabled.
 
-#### authorize(address)void
+#### authorize(address,address)void
 
-When not paused, asserts that the given account has AutoDraw enabled (`REFUSED` otherwise). Called as part of the AutoDraw transaction group to confirm delegation is still active; pausing the contract or the account calling `kill()` halts further draws.
+When not paused, asserts that the given `account` has AutoDraw enabled (`REFUSED` otherwise) and that `account` owns the given `card` — ownership is verified via a cross-contract `getCardData` call to the Main contract (`NOT_CARD_OWNER` otherwise). Called as part of the AutoDraw transaction group to confirm delegation is still active and that funds are being drawn into a card the delegator owns; pausing the contract or the account calling `kill()` halts further draws.
 
 ## AutoDraw logic signature
 
 A delegated `LogicSig` ([smart_contracts/auto_draw/contract.algo.ts](./smart_contracts/auto_draw/contract.algo.ts)) that authorizes an automatic debit ("draw") of a single asset from a card. It is parameterized with template variables `ASSET`, `GENESIS_HASH`, `KILLSWITCH_APP` and `MAIN_APP`, and only approves a transaction that satisfies all of the following:
 
 - It is a fee-0 asset transfer of `ASSET`, with no rekey and no asset close-out, on the expected network (`GENESIS_HASH`).
-- The next transaction (group index +1) is a `Killswitch.authorize` call to `KILLSWITCH_APP` whose account argument matches the transfer sender.
+- The next transaction (group index +1) is a `Killswitch.authorize` call to `KILLSWITCH_APP` whose `account` argument matches the transfer sender and whose `card` argument matches the transfer's receiver.
 - The transaction after that (group index +2) is a `Main.cardDebit` call to `MAIN_APP` whose `card`, `asset` and `amount` arguments match the transfer's receiver, asset and (as an upper bound) amount.
 
-This enforces that an automated draw can only happen alongside an active Killswitch authorization and a matching Main debit, and that the drawn amount never exceeds the debited amount.
+This enforces that an automated draw can only happen alongside an active Killswitch authorization and a matching Main debit, that the drawn amount never exceeds the debited amount, and — because `authorize` verifies the card is owned by the sender — that funds can only ever flow into a card the delegator owns rather than any card the Main contract happens to debit.
 
 ## Contract diagram
 
