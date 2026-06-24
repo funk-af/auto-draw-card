@@ -4,7 +4,7 @@
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
     intcblock 0 1 32 8
-    bytecblock "_owner" "_pauser" "paused" 0x151f7c75 "ma"
+    bytecblock 0x151f7c75 "_owner" "_pauser" "paused" "ma" 0x745dbf16
     // smart_contracts/killswitch/contract.algo.ts:41
     // export class Killswitch extends classes(Ownable, Pausable, Recoverable) {
     txn OnCompletion
@@ -12,7 +12,7 @@ main:
     assert // OnCompletion must be NoOp
     txn ApplicationID
     bz main_create_NoOp@16
-    pushbytess 0x73bc6501 0xb566a243 0xb9c21155 0xb1bbb0a8 0xe17bafb4 0xb0d953b3 0x0178f94b 0x1b529de8 0x0cadd163 0x785a1bf9 // method "authorize(address)void", method "enable(address)void", method "kill()void", method "owner()address", method "transferOwnership(address)void", method "pauser()address", method "pause()void", method "unpause()void", method "updatePauser(address)void", method "recoverAsset(uint64,uint64,address)void"
+    pushbytess 0x79d648af 0xb566a243 0xb9c21155 0xb1bbb0a8 0xe17bafb4 0xb0d953b3 0x0178f94b 0x1b529de8 0x0cadd163 0x785a1bf9 // method "authorize(address,address)void", method "enable(address)void", method "kill()void", method "owner()address", method "transferOwnership(address)void", method "pauser()address", method "pause()void", method "unpause()void", method "updatePauser(address)void", method "recoverAsset(uint64,uint64,address)void"
     txna ApplicationArgs 0
     match authorize enable kill owner transferOwnership pauser pause unpause updatePauser recoverAsset
     err
@@ -49,14 +49,14 @@ deploy:
     callsub _transferOwnership
     // smart_contracts/roles/pausable.algo.ts:34
     // public _pauser = GlobalState<Account>()
-    bytec_1 // "_pauser"
+    bytec_2 // "_pauser"
     // smart_contracts/killswitch/contract.algo.ts:58
     // this._pauser.value = Txn.sender
     txn Sender
     app_global_put
     // smart_contracts/roles/pausable.algo.ts:36
     // public paused = GlobalState<boolean>()
-    bytec_2 // "paused"
+    bytec_3 // "paused"
     // smart_contracts/killswitch/contract.algo.ts:59
     // this.paused.value = false
     intc_0 // 0
@@ -70,7 +70,7 @@ deploy:
     app_global_put
     // smart_contracts/killswitch/contract.algo.ts:55
     // @abimethod({ allowActions: ['NoOp'], onCreate: 'require' })
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     // smart_contracts/killswitch/contract.algo.ts:61
     // return Global.currentApplicationAddress
     global CurrentApplicationAddress
@@ -84,9 +84,15 @@ deploy:
 
 // smart_contracts/killswitch/contract.algo.ts::Killswitch.authorize[routing]() -> void:
 authorize:
-    // smart_contracts/killswitch/contract.algo.ts:69
-    // public authorize(account: Account): void {
+    // smart_contracts/killswitch/contract.algo.ts:74
+    // public authorize(account: Account, card: Account): void {
     txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
     dup
     len
     intc_2 // 32
@@ -97,63 +103,41 @@ authorize:
     intc_0 // 0
     // smart_contracts/roles/pausable.algo.ts:36
     // public paused = GlobalState<boolean>()
-    bytec_2 // "paused"
+    bytec_3 // "paused"
     // smart_contracts/roles/pausable.algo.ts:43
     // assert(!this.paused.value)
     app_global_get_ex
     assert // check GlobalState exists
     !
     assert
-    // smart_contracts/killswitch/contract.algo.ts:71
+    // smart_contracts/killswitch/contract.algo.ts:76
     // assert(this.accounts(account).exists, 'REFUSED')
+    dig 1
     box_len
     bury 1
     assert // REFUSED
-    // smart_contracts/killswitch/contract.algo.ts:69
-    // public authorize(account: Account): void {
-    intc_1 // 1
-    return
-
-
-// smart_contracts/killswitch/contract.algo.ts::Killswitch.enable[routing]() -> void:
-enable:
-    // smart_contracts/killswitch/contract.algo.ts:83
-    // public enable(card: Account): void {
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    // smart_contracts/killswitch/contract.algo.ts:84
-    // assert(!this.accounts(Txn.sender).exists, 'ALREADY_ENABLED')
-    txn Sender
-    box_len
-    bury 1
-    !
-    assert // ALREADY_ENABLED
-    // smart_contracts/killswitch/contract.algo.ts:86-89
+    // smart_contracts/killswitch/contract.algo.ts:78-81
     // const cardData = arc4.abiCall<typeof Main.prototype.getCardData>({
     //   appId: this.main_app.value,
     //   args: [card],
     // }).returnValue
     itxn_begin
-    // smart_contracts/killswitch/contract.algo.ts:87
+    // smart_contracts/killswitch/contract.algo.ts:79
     // appId: this.main_app.value,
     intc_0 // 0
     // smart_contracts/killswitch/contract.algo.ts:46
     // public main_app = GlobalState<Application>({ key: 'ma' })
     bytec 4 // "ma"
-    // smart_contracts/killswitch/contract.algo.ts:87
+    // smart_contracts/killswitch/contract.algo.ts:79
     // appId: this.main_app.value,
     app_global_get_ex
     assert // check GlobalState exists
-    // smart_contracts/killswitch/contract.algo.ts:86-89
+    // smart_contracts/killswitch/contract.algo.ts:78-81
     // const cardData = arc4.abiCall<typeof Main.prototype.getCardData>({
     //   appId: this.main_app.value,
     //   args: [card],
     // }).returnValue
-    pushbytes 0x745dbf16 // method "getCardData(address)(address,address,uint64,uint64)"
+    bytec 5 // method "getCardData(address)(address,address,uint64,uint64)"
     itxn_field ApplicationArgs
     itxn_field ApplicationID
     itxn_field ApplicationArgs
@@ -167,26 +151,96 @@ enable:
     extract 4 0
     dig 1
     extract 0 4
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     ==
     assert // Bytes has valid prefix
     len
     pushint 80 // 80
     ==
     assert // invalid number of bytes for CardData
-    // smart_contracts/killswitch/contract.algo.ts:90
+    // smart_contracts/killswitch/contract.algo.ts:82
+    // assert(cardData.owner === account, 'NOT_CARD_OWNER')
+    extract 4 32
+    ==
+    assert // NOT_CARD_OWNER
+    // smart_contracts/killswitch/contract.algo.ts:74
+    // public authorize(account: Account, card: Account): void {
+    intc_1 // 1
+    return
+
+
+// smart_contracts/killswitch/contract.algo.ts::Killswitch.enable[routing]() -> void:
+enable:
+    // smart_contracts/killswitch/contract.algo.ts:94
+    // public enable(card: Account): void {
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    // smart_contracts/killswitch/contract.algo.ts:95
+    // assert(!this.accounts(Txn.sender).exists, 'ALREADY_ENABLED')
+    txn Sender
+    box_len
+    bury 1
+    !
+    assert // ALREADY_ENABLED
+    // smart_contracts/killswitch/contract.algo.ts:97-100
+    // const cardData = arc4.abiCall<typeof Main.prototype.getCardData>({
+    //   appId: this.main_app.value,
+    //   args: [card],
+    // }).returnValue
+    itxn_begin
+    // smart_contracts/killswitch/contract.algo.ts:98
+    // appId: this.main_app.value,
+    intc_0 // 0
+    // smart_contracts/killswitch/contract.algo.ts:46
+    // public main_app = GlobalState<Application>({ key: 'ma' })
+    bytec 4 // "ma"
+    // smart_contracts/killswitch/contract.algo.ts:98
+    // appId: this.main_app.value,
+    app_global_get_ex
+    assert // check GlobalState exists
+    // smart_contracts/killswitch/contract.algo.ts:97-100
+    // const cardData = arc4.abiCall<typeof Main.prototype.getCardData>({
+    //   appId: this.main_app.value,
+    //   args: [card],
+    // }).returnValue
+    bytec 5 // method "getCardData(address)(address,address,uint64,uint64)"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    pushint 6 // appl
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    dig 1
+    extract 0 4
+    bytec_0 // 0x151f7c75
+    ==
+    assert // Bytes has valid prefix
+    len
+    pushint 80 // 80
+    ==
+    assert // invalid number of bytes for CardData
+    // smart_contracts/killswitch/contract.algo.ts:101
     // assert(cardData.owner === Txn.sender, 'NOT_CARD_OWNER')
     extract 4 32
     txn Sender
     ==
     assert // NOT_CARD_OWNER
-    // smart_contracts/killswitch/contract.algo.ts:92
+    // smart_contracts/killswitch/contract.algo.ts:103
     // this.accounts(Txn.sender).create()
     txn Sender
     intc_3 // 8
     box_create
     pop
-    // smart_contracts/killswitch/contract.algo.ts:83
+    // smart_contracts/killswitch/contract.algo.ts:94
     // public enable(card: Account): void {
     intc_1 // 1
     return
@@ -194,18 +248,18 @@ enable:
 
 // smart_contracts/killswitch/contract.algo.ts::Killswitch.kill[routing]() -> void:
 kill:
-    // smart_contracts/killswitch/contract.algo.ts:99
+    // smart_contracts/killswitch/contract.algo.ts:110
     // assert(this.accounts(Txn.sender).exists, 'ALREADY_DISABLED')
     txn Sender
     box_len
     bury 1
     assert // ALREADY_DISABLED
-    // smart_contracts/killswitch/contract.algo.ts:100
+    // smart_contracts/killswitch/contract.algo.ts:111
     // this.accounts(Txn.sender).delete()
     txn Sender
     box_del
     pop
-    // smart_contracts/killswitch/contract.algo.ts:98
+    // smart_contracts/killswitch/contract.algo.ts:109
     // public kill(): void {
     intc_1 // 1
     return
@@ -218,14 +272,14 @@ owner:
     intc_0 // 0
     // smart_contracts/roles/ownable.algo.ts:45
     // public _owner = GlobalState<Account>()
-    bytec_0 // "_owner"
+    bytec_1 // "_owner"
     // smart_contracts/roles/ownable.algo.ts:66
     // return this._owner.value
     app_global_get_ex
     assert // check GlobalState exists
     // smart_contracts/roles/ownable.algo.ts:64
     // @abimethod({ readonly: true })
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -262,14 +316,14 @@ pauser:
     intc_0 // 0
     // smart_contracts/roles/pausable.algo.ts:34
     // public _pauser = GlobalState<Account>()
-    bytec_1 // "_pauser"
+    bytec_2 // "_pauser"
     // smart_contracts/roles/pausable.algo.ts:59
     // return this._pauser.value
     app_global_get_ex
     assert // check GlobalState exists
     // smart_contracts/roles/pausable.algo.ts:58
     // public pauser(): Account {
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -284,7 +338,7 @@ pause:
     callsub onlyPauser
     // smart_contracts/roles/pausable.algo.ts:36
     // public paused = GlobalState<boolean>()
-    bytec_2 // "paused"
+    bytec_3 // "paused"
     // smart_contracts/roles/pausable.algo.ts:69
     // this.paused.value = true
     intc_1 // 1
@@ -306,7 +360,7 @@ unpause:
     callsub onlyPauser
     // smart_contracts/roles/pausable.algo.ts:36
     // public paused = GlobalState<boolean>()
-    bytec_2 // "paused"
+    bytec_3 // "paused"
     // smart_contracts/roles/pausable.algo.ts:79
     // this.paused.value = false
     intc_0 // 0
@@ -342,7 +396,7 @@ updatePauser:
     assert
     // smart_contracts/roles/pausable.algo.ts:34
     // public _pauser = GlobalState<Account>()
-    bytec_1 // "_pauser"
+    bytec_2 // "_pauser"
     // smart_contracts/roles/pausable.algo.ts:90
     // this._pauser.value = _newPauser
     dig 1
@@ -472,7 +526,7 @@ onlyOwner:
     intc_0 // 0
     // smart_contracts/roles/ownable.algo.ts:45
     // public _owner = GlobalState<Account>()
-    bytec_0 // "_owner"
+    bytec_1 // "_owner"
     // smart_contracts/roles/ownable.algo.ts:52
     // assert(Txn.sender === this._owner.value, 'SENDER_NOT_ALLOWED')
     app_global_get_ex
@@ -492,7 +546,7 @@ _transferOwnership:
     intc_0 // 0
     // smart_contracts/roles/ownable.algo.ts:45
     // public _owner = GlobalState<Account>()
-    bytec_0 // "_owner"
+    bytec_1 // "_owner"
     // smart_contracts/roles/ownable.algo.ts:75
     // const previousOwner = this._owner.hasValue ? this._owner.value : Global.zeroAddress
     app_global_get_ex
@@ -501,7 +555,7 @@ _transferOwnership:
     intc_0 // 0
     // smart_contracts/roles/ownable.algo.ts:45
     // public _owner = GlobalState<Account>()
-    bytec_0 // "_owner"
+    bytec_1 // "_owner"
     // smart_contracts/roles/ownable.algo.ts:75
     // const previousOwner = this._owner.hasValue ? this._owner.value : Global.zeroAddress
     app_global_get_ex
@@ -510,7 +564,7 @@ _transferOwnership:
 _transferOwnership_ternary_merge@3:
     // smart_contracts/roles/ownable.algo.ts:45
     // public _owner = GlobalState<Account>()
-    bytec_0 // "_owner"
+    bytec_1 // "_owner"
     // smart_contracts/roles/ownable.algo.ts:76
     // this._owner.value = newOwner
     frame_dig -1
@@ -543,7 +597,7 @@ onlyPauser:
     intc_0 // 0
     // smart_contracts/roles/pausable.algo.ts:34
     // public _pauser = GlobalState<Account>()
-    bytec_1 // "_pauser"
+    bytec_2 // "_pauser"
     // smart_contracts/roles/pausable.algo.ts:50
     // assert(Txn.sender === this._pauser.value)
     app_global_get_ex

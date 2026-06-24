@@ -3,7 +3,7 @@
 
 // smart_contracts/auto_draw/contract.algo.ts::program() -> uint64:
 main:
-    intcblock 1 0 2 6 TMPL_ASSET TMPL_KILLSWITCH_APP TMPL_MAIN_APP
+    intcblock 1 2 0 6 TMPL_ASSET TMPL_KILLSWITCH_APP TMPL_MAIN_APP
     bytecblock TMPL_GENESIS_HASH
     // smart_contracts/auto_draw/contract.algo.ts:44
     // const txnKillswitch = gtxn.Transaction(Txn.groupIndex + 1)
@@ -13,7 +13,7 @@ main:
     // smart_contracts/auto_draw/contract.algo.ts:45
     // const txnMainDebit = gtxn.Transaction(Txn.groupIndex + 2)
     txn GroupIndex
-    intc_2 // 2
+    intc_1 // 2
     +
     // smart_contracts/auto_draw/contract.algo.ts:49
     // Txn.rekeyTo === Global.zeroAddress &&
@@ -23,7 +23,7 @@ main:
     // smart_contracts/auto_draw/contract.algo.ts:49-50
     // Txn.rekeyTo === Global.zeroAddress &&
     // Txn.assetCloseTo === Global.zeroAddress &&
-    bz main_bool_false@19
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:50
     // Txn.assetCloseTo === Global.zeroAddress &&
     txn AssetCloseTo
@@ -32,7 +32,7 @@ main:
     // smart_contracts/auto_draw/contract.algo.ts:49-50
     // Txn.rekeyTo === Global.zeroAddress &&
     // Txn.assetCloseTo === Global.zeroAddress &&
-    bz main_bool_false@19
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:51
     // Global.genesisHash === TemplateVar<bytes>('GENESIS_HASH') &&
     global GenesisHash
@@ -42,7 +42,7 @@ main:
     // Txn.rekeyTo === Global.zeroAddress &&
     // Txn.assetCloseTo === Global.zeroAddress &&
     // Global.genesisHash === TemplateVar<bytes>('GENESIS_HASH') &&
-    bz main_bool_false@19
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:53
     // Txn.typeEnum === TransactionType.AssetTransfer &&
     txn TypeEnum
@@ -54,7 +54,7 @@ main:
     // Global.genesisHash === TemplateVar<bytes>('GENESIS_HASH') &&
     // // Enforce this transaction is an axfer with criteria
     // Txn.typeEnum === TransactionType.AssetTransfer &&
-    bz main_bool_false@19
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:54
     // Txn.xferAsset === ASSET &&
     txn XferAsset
@@ -67,7 +67,7 @@ main:
     // // Enforce this transaction is an axfer with criteria
     // Txn.typeEnum === TransactionType.AssetTransfer &&
     // Txn.xferAsset === ASSET &&
-    bz main_bool_false@19
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:55
     // Txn.fee === 0 &&
     txn Fee
@@ -79,7 +79,7 @@ main:
     // Txn.typeEnum === TransactionType.AssetTransfer &&
     // Txn.xferAsset === ASSET &&
     // Txn.fee === 0 &&
-    bnz main_bool_false@19
+    bnz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:57
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     dig 1
@@ -96,7 +96,7 @@ main:
     // Txn.fee === 0 &&
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
-    bz main_bool_false@19
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:58
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
     dig 1
@@ -114,14 +114,11 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    bz main_bool_false@19
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:59
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
+    // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
     dig 1
-    intc_1 // 0
-    gtxnsas ApplicationArgs
-    pushbytes 0x73bc6501 // method "authorize(address)void"
-    ==
+    gtxns OnCompletion
     // smart_contracts/auto_draw/contract.algo.ts:49-59
     // Txn.rekeyTo === Global.zeroAddress &&
     // Txn.assetCloseTo === Global.zeroAddress &&
@@ -133,12 +130,15 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
-    bz main_bool_false@19
-    // smart_contracts/auto_draw/contract.algo.ts:60
     // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    bnz main_bool_false@20
+    // smart_contracts/auto_draw/contract.algo.ts:60
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     dig 1
-    gtxns OnCompletion
+    intc_2 // 0
+    gtxnsas ApplicationArgs
+    pushbytes 0x79d648af // method "authorize(address,address)void"
+    ==
     // smart_contracts/auto_draw/contract.algo.ts:49-60
     // Txn.rekeyTo === Global.zeroAddress &&
     // Txn.assetCloseTo === Global.zeroAddress &&
@@ -150,9 +150,9 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
-    bnz main_bool_false@19
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:61
     // txnKillswitch.appArgs(1) === Txn.sender.bytes &&
     dig 1
@@ -171,17 +171,18 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.appArgs(1) === Txn.sender.bytes &&
-    bz main_bool_false@19
-    // smart_contracts/auto_draw/contract.algo.ts:63
-    // txnMainDebit.type === TransactionType.ApplicationCall &&
-    dup
-    gtxns TypeEnum
-    intc_3 // 6
+    bz main_bool_false@20
+    // smart_contracts/auto_draw/contract.algo.ts:62
+    // txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
+    dig 1
+    intc_1 // 2
+    gtxnsas ApplicationArgs
+    txn AssetReceiver
     ==
-    // smart_contracts/auto_draw/contract.algo.ts:49-63
+    // smart_contracts/auto_draw/contract.algo.ts:49-62
     // Txn.rekeyTo === Global.zeroAddress &&
     // Txn.assetCloseTo === Global.zeroAddress &&
     // Global.genesisHash === TemplateVar<bytes>('GENESIS_HASH') &&
@@ -192,17 +193,16 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.appArgs(1) === Txn.sender.bytes &&
-    // // Enforce the second next transaction is a Main call
-    // txnMainDebit.type === TransactionType.ApplicationCall &&
-    bz main_bool_false@19
+    // txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:64
-    // txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
+    // txnMainDebit.type === TransactionType.ApplicationCall &&
     dup
-    gtxns ApplicationID
-    intc 6 // TMPL_MAIN_APP
+    gtxns TypeEnum
+    intc_3 // 6
     ==
     // smart_contracts/auto_draw/contract.algo.ts:49-64
     // Txn.rekeyTo === Global.zeroAddress &&
@@ -215,19 +215,18 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.appArgs(1) === Txn.sender.bytes &&
+    // txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
     // // Enforce the second next transaction is a Main call
     // txnMainDebit.type === TransactionType.ApplicationCall &&
-    // txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
-    bz main_bool_false@19
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:65
-    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
+    // txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
     dup
-    intc_1 // 0
-    gtxnsas ApplicationArgs
-    pushbytes 0xd3c7a652 // method "cardDebit(address,uint64,uint64,uint64,string)void"
+    gtxns ApplicationID
+    intc 6 // TMPL_MAIN_APP
     ==
     // smart_contracts/auto_draw/contract.algo.ts:49-65
     // Txn.rekeyTo === Global.zeroAddress &&
@@ -240,14 +239,14 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.appArgs(1) === Txn.sender.bytes &&
+    // txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
     // // Enforce the second next transaction is a Main call
     // txnMainDebit.type === TransactionType.ApplicationCall &&
     // txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
-    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
-    bz main_bool_false@19
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:66
     // txnMainDebit.onCompletion === OnCompleteAction.NoOp &&
     dup
@@ -263,21 +262,21 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.appArgs(1) === Txn.sender.bytes &&
+    // txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
     // // Enforce the second next transaction is a Main call
     // txnMainDebit.type === TransactionType.ApplicationCall &&
     // txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
-    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
     // txnMainDebit.onCompletion === OnCompleteAction.NoOp &&
-    bnz main_bool_false@19
+    bnz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:67
-    // Txn.assetReceiver.bytes === txnMainDebit.appArgs(1) &&
-    txn AssetReceiver
-    dig 1
-    intc_0 // 1
+    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
+    dup
+    intc_2 // 0
     gtxnsas ApplicationArgs
+    pushbytes 0xd3c7a652 // method "cardDebit(address,uint64,uint64,uint64,string)void"
     ==
     // smart_contracts/auto_draw/contract.algo.ts:49-67
     // Txn.rekeyTo === Global.zeroAddress &&
@@ -290,23 +289,22 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.appArgs(1) === Txn.sender.bytes &&
+    // txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
     // // Enforce the second next transaction is a Main call
     // txnMainDebit.type === TransactionType.ApplicationCall &&
     // txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
-    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
     // txnMainDebit.onCompletion === OnCompleteAction.NoOp &&
-    // Txn.assetReceiver.bytes === txnMainDebit.appArgs(1) &&
-    bz main_bool_false@19
+    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:68
-    // Txn.xferAsset.id === op.btoi(txnMainDebit.appArgs(2)) &&
-    txn XferAsset
-    dig 1
-    intc_2 // 2
+    // txnMainDebit.appArgs(1) === Txn.assetReceiver.bytes &&
+    dup
+    intc_0 // 1
     gtxnsas ApplicationArgs
-    btoi
+    txn AssetReceiver
     ==
     // smart_contracts/auto_draw/contract.algo.ts:49-68
     // Txn.rekeyTo === Global.zeroAddress &&
@@ -319,25 +317,25 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.appArgs(1) === Txn.sender.bytes &&
+    // txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
     // // Enforce the second next transaction is a Main call
     // txnMainDebit.type === TransactionType.ApplicationCall &&
     // txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
-    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
     // txnMainDebit.onCompletion === OnCompleteAction.NoOp &&
-    // Txn.assetReceiver.bytes === txnMainDebit.appArgs(1) &&
-    // Txn.xferAsset.id === op.btoi(txnMainDebit.appArgs(2)) &&
-    bz main_bool_false@19
+    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
+    // txnMainDebit.appArgs(1) === Txn.assetReceiver.bytes &&
+    bz main_bool_false@20
     // smart_contracts/auto_draw/contract.algo.ts:69
-    // Txn.assetAmount <= op.btoi(txnMainDebit.appArgs(3))
-    txn AssetAmount
-    dig 1
-    pushint 3 // 3
+    // op.btoi(txnMainDebit.appArgs(2)) === Txn.xferAsset.id &&
+    dup
+    intc_1 // 2
     gtxnsas ApplicationArgs
     btoi
-    <=
+    txn XferAsset
+    ==
     // smart_contracts/auto_draw/contract.algo.ts:49-69
     // Txn.rekeyTo === Global.zeroAddress &&
     // Txn.assetCloseTo === Global.zeroAddress &&
@@ -349,20 +347,52 @@ main:
     // // Enforce the next transaction is a Killswitch call
     // txnKillswitch.type === TransactionType.ApplicationCall &&
     // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     // txnKillswitch.appArgs(1) === Txn.sender.bytes &&
+    // txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
     // // Enforce the second next transaction is a Main call
     // txnMainDebit.type === TransactionType.ApplicationCall &&
     // txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
-    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
     // txnMainDebit.onCompletion === OnCompleteAction.NoOp &&
-    // Txn.assetReceiver.bytes === txnMainDebit.appArgs(1) &&
-    // Txn.xferAsset.id === op.btoi(txnMainDebit.appArgs(2)) &&
-    // Txn.assetAmount <= op.btoi(txnMainDebit.appArgs(3))
-    bz main_bool_false@19
+    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
+    // txnMainDebit.appArgs(1) === Txn.assetReceiver.bytes &&
+    // op.btoi(txnMainDebit.appArgs(2)) === Txn.xferAsset.id &&
+    bz main_bool_false@20
+    // smart_contracts/auto_draw/contract.algo.ts:70
+    // op.btoi(txnMainDebit.appArgs(3)) >= Txn.assetAmount
+    dup
+    pushint 3 // 3
+    gtxnsas ApplicationArgs
+    btoi
+    txn AssetAmount
+    >=
+    // smart_contracts/auto_draw/contract.algo.ts:49-70
+    // Txn.rekeyTo === Global.zeroAddress &&
+    // Txn.assetCloseTo === Global.zeroAddress &&
+    // Global.genesisHash === TemplateVar<bytes>('GENESIS_HASH') &&
+    // // Enforce this transaction is an axfer with criteria
+    // Txn.typeEnum === TransactionType.AssetTransfer &&
+    // Txn.xferAsset === ASSET &&
+    // Txn.fee === 0 &&
+    // // Enforce the next transaction is a Killswitch call
+    // txnKillswitch.type === TransactionType.ApplicationCall &&
+    // txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
+    // txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    // txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
+    // txnKillswitch.appArgs(1) === Txn.sender.bytes &&
+    // txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
+    // // Enforce the second next transaction is a Main call
+    // txnMainDebit.type === TransactionType.ApplicationCall &&
+    // txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
+    // txnMainDebit.onCompletion === OnCompleteAction.NoOp &&
+    // txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
+    // txnMainDebit.appArgs(1) === Txn.assetReceiver.bytes &&
+    // op.btoi(txnMainDebit.appArgs(2)) === Txn.xferAsset.id &&
+    // op.btoi(txnMainDebit.appArgs(3)) >= Txn.assetAmount
+    bz main_bool_false@20
     intc_0 // 1
-    // smart_contracts/auto_draw/contract.algo.ts:47-70
+    // smart_contracts/auto_draw/contract.algo.ts:47-71
     // return (
     //   // Safety checks
     //   Txn.rekeyTo === Global.zeroAddress &&
@@ -375,23 +405,24 @@ main:
     //   // Enforce the next transaction is a Killswitch call
     //   txnKillswitch.type === TransactionType.ApplicationCall &&
     //   txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    //   txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     //   txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    //   txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     //   txnKillswitch.appArgs(1) === Txn.sender.bytes &&
+    //   txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
     //   // Enforce the second next transaction is a Main call
     //   txnMainDebit.type === TransactionType.ApplicationCall &&
     //   txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
-    //   txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
     //   txnMainDebit.onCompletion === OnCompleteAction.NoOp &&
-    //   Txn.assetReceiver.bytes === txnMainDebit.appArgs(1) &&
-    //   Txn.xferAsset.id === op.btoi(txnMainDebit.appArgs(2)) &&
-    //   Txn.assetAmount <= op.btoi(txnMainDebit.appArgs(3))
+    //   txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
+    //   txnMainDebit.appArgs(1) === Txn.assetReceiver.bytes &&
+    //   op.btoi(txnMainDebit.appArgs(2)) === Txn.xferAsset.id &&
+    //   op.btoi(txnMainDebit.appArgs(3)) >= Txn.assetAmount
     // )
     return
 
-main_bool_false@19:
-    intc_1 // 0
-    // smart_contracts/auto_draw/contract.algo.ts:47-70
+main_bool_false@20:
+    intc_2 // 0
+    // smart_contracts/auto_draw/contract.algo.ts:47-71
     // return (
     //   // Safety checks
     //   Txn.rekeyTo === Global.zeroAddress &&
@@ -404,16 +435,17 @@ main_bool_false@19:
     //   // Enforce the next transaction is a Killswitch call
     //   txnKillswitch.type === TransactionType.ApplicationCall &&
     //   txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-    //   txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     //   txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+    //   txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
     //   txnKillswitch.appArgs(1) === Txn.sender.bytes &&
+    //   txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
     //   // Enforce the second next transaction is a Main call
     //   txnMainDebit.type === TransactionType.ApplicationCall &&
     //   txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
-    //   txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
     //   txnMainDebit.onCompletion === OnCompleteAction.NoOp &&
-    //   Txn.assetReceiver.bytes === txnMainDebit.appArgs(1) &&
-    //   Txn.xferAsset.id === op.btoi(txnMainDebit.appArgs(2)) &&
-    //   Txn.assetAmount <= op.btoi(txnMainDebit.appArgs(3))
+    //   txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
+    //   txnMainDebit.appArgs(1) === Txn.assetReceiver.bytes &&
+    //   op.btoi(txnMainDebit.appArgs(2)) === Txn.xferAsset.id &&
+    //   op.btoi(txnMainDebit.appArgs(3)) >= Txn.assetAmount
     // )
     return

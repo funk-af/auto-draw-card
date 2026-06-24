@@ -56,17 +56,18 @@ export class AutoDraw extends LogicSig {
       // Enforce the next transaction is a Killswitch call
       txnKillswitch.type === TransactionType.ApplicationCall &&
       txnKillswitch.appId === TemplateVar<Application>('KILLSWITCH_APP') &&
-      txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
       txnKillswitch.onCompletion === OnCompleteAction.NoOp &&
+      txnKillswitch.appArgs(0) === arc4.methodSelector<typeof Killswitch.prototype.authorize>() &&
       txnKillswitch.appArgs(1) === Txn.sender.bytes &&
+      txnKillswitch.appArgs(2) === Txn.assetReceiver.bytes &&
       // Enforce the second next transaction is a Main call
       txnMainDebit.type === TransactionType.ApplicationCall &&
       txnMainDebit.appId === TemplateVar<Application>('MAIN_APP') &&
-      txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
       txnMainDebit.onCompletion === OnCompleteAction.NoOp &&
-      Txn.assetReceiver.bytes === txnMainDebit.appArgs(1) &&
-      Txn.xferAsset.id === op.btoi(txnMainDebit.appArgs(2)) &&
-      Txn.assetAmount <= op.btoi(txnMainDebit.appArgs(3))
+      txnMainDebit.appArgs(0) === arc4.methodSelector<typeof Main.prototype.cardDebit>() &&
+      txnMainDebit.appArgs(1) === Txn.assetReceiver.bytes &&
+      op.btoi(txnMainDebit.appArgs(2)) === Txn.xferAsset.id &&
+      op.btoi(txnMainDebit.appArgs(3)) >= Txn.assetAmount
     )
   }
 }
