@@ -580,7 +580,7 @@ describe('Auto-Draw Card', () => {
   test('Killswitch: authorize enabled user succeeds', async () => {
     const result = await ksClient.send.authorize({
       args: { account: user.addr.toString() },
-      staticFee: AlgoAmount.MicroAlgos(2_000),
+      staticFee: AlgoAmount.MicroAlgos(1_000),
     })
     expect(result.confirmation.poolError).toBe('')
   })
@@ -593,9 +593,7 @@ describe('Auto-Draw Card', () => {
   test('Killswitch: user kills their delegation — authorize fails with REFUSED', async () => {
     await ksClient.send.kill({ args: [], sender: user.addr })
 
-    await expect(
-      ksClient.send.authorize({ args: { account: user.addr.toString() } }),
-    ).rejects.toThrow('REFUSED')
+    await expect(ksClient.send.authorize({ args: { account: user.addr.toString() } })).rejects.toThrow('REFUSED')
   })
 
   /**
@@ -612,7 +610,7 @@ describe('Auto-Draw Card', () => {
 
     const result = await ksClient.send.authorize({
       args: { account: user.addr.toString() },
-      staticFee: AlgoAmount.MicroAlgos(2_000),
+      staticFee: AlgoAmount.MicroAlgos(1_000),
     })
     expect(result.confirmation.poolError).toBe('')
   })
@@ -636,9 +634,7 @@ describe('Auto-Draw Card', () => {
    * users who explicitly enabled delegation can be authorized.
    */
   test('Killswitch: authorize non-enabled account fails with REFUSED', async () => {
-    await expect(
-      ksClient.send.authorize({ args: { account: user2.addr.toString() } }),
-    ).rejects.toThrow('REFUSED')
+    await expect(ksClient.send.authorize({ args: { account: user2.addr.toString() } })).rejects.toThrow('REFUSED')
   })
 
   /**
@@ -649,9 +645,7 @@ describe('Auto-Draw Card', () => {
   test('Killswitch: pause contract — authorize fails', async () => {
     await ksClient.send.pause({ args: [] })
 
-    await expect(
-      ksClient.send.authorize({ args: { account: user.addr.toString() } }),
-    ).rejects.toThrow()
+    await expect(ksClient.send.authorize({ args: { account: user.addr.toString() } })).rejects.toThrow()
   })
 
   /**
@@ -663,7 +657,7 @@ describe('Auto-Draw Card', () => {
 
     const result = await ksClient.send.authorize({
       args: { account: user.addr.toString() },
-      staticFee: AlgoAmount.MicroAlgos(2_000),
+      staticFee: AlgoAmount.MicroAlgos(1_000),
     })
     expect(result.confirmation.poolError).toBe('')
   })
@@ -731,7 +725,7 @@ describe('Auto-Draw Card', () => {
     composer.addAppCallMethodCall(
       await ksClient.params.authorize({
         args: { account: user.addr.toString() },
-        staticFee: AlgoAmount.MicroAlgos(2_000),
+        staticFee: AlgoAmount.MicroAlgos(1_000),
       }),
     )
     // [2] cardDebit: inner txn card→Main now sees the card funded by [0]
@@ -794,7 +788,7 @@ describe('Auto-Draw Card', () => {
     composer.addAppCallMethodCall(
       await ksClient.params.authorize({
         args: { account: user.addr.toString() },
-        staticFee: AlgoAmount.MicroAlgos(2_000),
+        staticFee: AlgoAmount.MicroAlgos(1_000),
       }),
     )
     composer.addAppCallMethodCall(
@@ -849,7 +843,7 @@ describe('Auto-Draw Card', () => {
     composer.addAppCallMethodCall(
       await ksClient.params.authorize({
         args: { account: user.addr.toString() },
-        staticFee: AlgoAmount.MicroAlgos(2_000),
+        staticFee: AlgoAmount.MicroAlgos(1_000),
       }),
     )
     composer.addAppCallMethodCall(
