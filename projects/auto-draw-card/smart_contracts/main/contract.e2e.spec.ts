@@ -287,6 +287,7 @@ describe('Auto-Draw Card', () => {
 
     const result = await appClient.send.cardDebit({
       args: {
+        cardOwner: user.addr.toString(),
         card: newCardAddress,
         asset: fakeUSDC,
         amount: 5_000_000,
@@ -297,6 +298,32 @@ describe('Auto-Draw Card', () => {
     })
 
     expect(result.confirmation.poolError).toBeDefined()
+  })
+
+  /**
+   * Negative case for the ownership guard that now lives in `cardDebit`: passing a `cardOwner`
+   * that does not match the card's stored owner reverts with OWNER_INVALID. This is the check
+   * that prevents an AutoDraw group from funding and debiting a card the delegating account
+   * does not own; it was moved here from `Killswitch.authorize`.
+   */
+  test('cardDebit fails when cardOwner does not own the card', async () => {
+    const nextNonce = await appClient.send.getNextCardNonce({
+      args: { card: newCardAddress },
+    })
+
+    await expect(
+      appClient.send.cardDebit({
+        args: {
+          cardOwner: user2.addr.toString(),
+          card: newCardAddress,
+          asset: fakeUSDC,
+          amount: 1_000_000,
+          nonce: nextNonce.return!,
+          ref: 'Test Transaction REF-OWNER',
+        },
+        staticFee: AlgoAmount.MicroAlgos(2_000),
+      }),
+    ).rejects.toThrow('OWNER_INVALID')
   })
 
   /**
@@ -552,7 +579,7 @@ describe('Auto-Draw Card', () => {
    */
   test('Killswitch: authorize enabled user succeeds', async () => {
     const result = await ksClient.send.authorize({
-      args: { account: user.addr.toString(), card: autoDrawCardAddress },
+      args: { account: user.addr.toString() },
       staticFee: AlgoAmount.MicroAlgos(2_000),
     })
     expect(result.confirmation.poolError).toBe('')
@@ -567,7 +594,7 @@ describe('Auto-Draw Card', () => {
     await ksClient.send.kill({ args: [], sender: user.addr })
 
     await expect(
-      ksClient.send.authorize({ args: { account: user.addr.toString(), card: autoDrawCardAddress } }),
+      ksClient.send.authorize({ args: { account: user.addr.toString() } }),
     ).rejects.toThrow('REFUSED')
   })
 
@@ -584,7 +611,7 @@ describe('Auto-Draw Card', () => {
     })
 
     const result = await ksClient.send.authorize({
-      args: { account: user.addr.toString(), card: autoDrawCardAddress },
+      args: { account: user.addr.toString() },
       staticFee: AlgoAmount.MicroAlgos(2_000),
     })
     expect(result.confirmation.poolError).toBe('')
@@ -610,7 +637,7 @@ describe('Auto-Draw Card', () => {
    */
   test('Killswitch: authorize non-enabled account fails with REFUSED', async () => {
     await expect(
-      ksClient.send.authorize({ args: { account: user2.addr.toString(), card: autoDrawCardAddress } }),
+      ksClient.send.authorize({ args: { account: user2.addr.toString() } }),
     ).rejects.toThrow('REFUSED')
   })
 
@@ -623,7 +650,7 @@ describe('Auto-Draw Card', () => {
     await ksClient.send.pause({ args: [] })
 
     await expect(
-      ksClient.send.authorize({ args: { account: user.addr.toString(), card: autoDrawCardAddress } }),
+      ksClient.send.authorize({ args: { account: user.addr.toString() } }),
     ).rejects.toThrow()
   })
 
@@ -635,7 +662,7 @@ describe('Auto-Draw Card', () => {
     await ksClient.send.unpause({ args: [] })
 
     const result = await ksClient.send.authorize({
-      args: { account: user.addr.toString(), card: autoDrawCardAddress },
+      args: { account: user.addr.toString() },
       staticFee: AlgoAmount.MicroAlgos(2_000),
     })
     expect(result.confirmation.poolError).toBe('')
@@ -700,10 +727,10 @@ describe('Auto-Draw Card', () => {
     const composer = algorand.newGroup()
     // [0] AutoDraw lsig axfer: user's main account → card (fee=0)
     composer.addTransaction(axferTxn, algosdk.makeLogicSigAccountTransactionSigner(autoDrawLsig))
-    // [1] Killswitch.authorize: validates user's switches, paused state, and card ownership
+    // [1] Killswitch.authorize: validates user's switches and paused state
     composer.addAppCallMethodCall(
       await ksClient.params.authorize({
-        args: { account: user.addr.toString(), card: autoDrawCardAddress },
+        args: { account: user.addr.toString() },
         staticFee: AlgoAmount.MicroAlgos(2_000),
       }),
     )
@@ -714,6 +741,7 @@ describe('Auto-Draw Card', () => {
           card: autoDrawCardAddress,
           asset: fakeUSDC,
           amount: AUTO_DRAW_DEBIT_AMOUNT,
+          cardOwner: user.addr.toString(),
           nonce: nonceResult.return!,
           ref: 'AutoDraw Test REF-001',
         },
@@ -765,13 +793,14 @@ describe('Auto-Draw Card', () => {
     composer.addTransaction(axferTxn, algosdk.makeLogicSigAccountTransactionSigner(autoDrawLsig))
     composer.addAppCallMethodCall(
       await ksClient.params.authorize({
-        args: { account: user.addr.toString(), card: autoDrawCardAddress },
+        args: { account: user.addr.toString() },
         staticFee: AlgoAmount.MicroAlgos(2_000),
       }),
     )
     composer.addAppCallMethodCall(
       await appClient.params.cardDebit({
         args: {
+          cardOwner: user.addr.toString(),
           card: autoDrawCardAddress,
           asset: fakeUSDC,
           amount: AUTO_DRAW_DEBIT_AMOUNT,
@@ -819,13 +848,14 @@ describe('Auto-Draw Card', () => {
     composer.addTransaction(axferTxn, algosdk.makeLogicSigAccountTransactionSigner(autoDrawLsig))
     composer.addAppCallMethodCall(
       await ksClient.params.authorize({
-        args: { account: user.addr.toString(), card: autoDrawCardAddress },
+        args: { account: user.addr.toString() },
         staticFee: AlgoAmount.MicroAlgos(2_000),
       }),
     )
     composer.addAppCallMethodCall(
       await appClient.params.cardDebit({
         args: {
+          cardOwner: user.addr.toString(),
           card: autoDrawCardAddress,
           asset: fakeUSDC,
           amount: AUTO_DRAW_DEBIT_AMOUNT,

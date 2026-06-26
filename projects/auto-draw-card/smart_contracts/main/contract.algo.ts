@@ -409,13 +409,20 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
    * Debits the specified amount of the given asset from the card account.
    * Only the owner of the contract can perform this operation.
    *
+   * The AutoDraw lsig binds `card` and `cardOwner` to the axfer receiver, so verifying here that
+   * `cardOwner` owns `card` prevents the delegated draw from funding (and subsequently
+   * debiting) a card the account does not own.
+   *
    * @param card The card from which the asset will be debited.
    * @param asset The asset to be debited.
    * @param amount The amount of the asset to be debited.
    */
-  public cardDebit(card: Account, asset: Asset, amount: uint64, nonce: uint64, ref: string): void {
+  public cardDebit(cardOwner: Account, card: Account, asset: Asset, amount: uint64, nonce: uint64, ref: string): void {
     this.whenNotPaused()
     this.onlyOwner()
+
+    // Ensure card and owner align
+    assert(this.cards(card).value.owner === cardOwner, 'OWNER_INVALID')
 
     // Ensure the nonce is correct
     const nextNonce: uint64 = this.cards(card).value.nonce

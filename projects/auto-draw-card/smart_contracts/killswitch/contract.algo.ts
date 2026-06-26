@@ -64,22 +64,11 @@ export class Killswitch extends classes(Ownable, Pausable, Recoverable) {
   /**
    * Checks if the delegation is authorized for the account.
    *
-   * The AutoDraw lsig binds `card` to the axfer receiver, so verifying here that
-   * `account` owns `card` prevents the delegated draw from funding (and subsequently
-   * debiting) a card the account does not own.
-   *
    * @param account The address of the user to check.
-   * @param card The card receiving the AutoDraw axfer; must be owned by `account`.
    */
-  public authorize(account: Account, card: Account): void {
+  public authorize(account: Account): void {
     this.whenNotPaused()
     assert(this.accounts(account).exists, 'REFUSED')
-
-    const cardData = arc4.abiCall<typeof Main.prototype.getCardData>({
-      appId: this.main_app.value,
-      args: [card],
-    }).returnValue
-    assert(cardData.owner === account, 'NOT_CARD_OWNER')
   }
 
   /**
