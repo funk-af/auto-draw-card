@@ -157,6 +157,9 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
   // Only one allowed at any given point. MBR is sponsored by the contract owner (app account).
   public withdrawals = BoxMap<Account, WithdrawalRequest>({ keyPrefix: 'wr' })
 
+  // Partner address
+  public partner_address = GlobalState<Account>({ key: 'pa' })
+
   // Omnibus address
   public omnibus_address = GlobalState<Account>({ key: 'oa' })
 
@@ -172,11 +175,37 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
   }
 
   /**
+   * Assert that the current transaction sender is the card holder/owner
+   * @param card Card address
+   */
+  private onlyCardOwner(card: Account): void {
+    assert(this.isCardOwner(card), 'SENDER_NOT_ALLOWED')
+  }
+
+  /**
+   * Check if the current transaction sender is the partner address
+   * @returns True if the sender is the partner
+   */
+  private isPartner(): boolean {
+    return Txn.sender === this.partner_address.value
+  }
+
+  /**
+   * Assert that the current transaction sender is the partner address
+   */
+  private onlyPartner(): void {
+    assert(this.isPartner(), 'SENDER_NOT_ALLOWED')
+  }
+
+  /**
    * Opt-in a card into an asset. Minimum balance requirement must be met prior to calling this function.
+   * Only the partner can call this function.
    * @param card Card address
    * @param asset Asset to opt-in to
    */
-  private cardAssetOptIn(card: Account, asset: Asset): void {
+  public cardAssetOptIn(card: Account, asset: Asset): void {
+    this.onlyPartner()
+
     itxn
       .assetTransfer({
         sender: card,
@@ -289,7 +318,7 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
       .submit()
   }
 
-  // ===== Owner Methods =====
+  // ===== Owner / Partner Methods =====
   /**
    * Set the number of seconds a withdrawal request must wait until being withdrawn
    * @param seconds New number of seconds to wait
@@ -312,13 +341,13 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
 
   /**
    * Create a card. This generates a brand new account and funds the minimum balance requirement
-   * from the contract (owner-sponsored). Only the owner can call this function.
+   * from the contract (owner-sponsored). Only the partner can call this function.
    * @param cardOwner The card holder who will own/control the card
    * @param asset Asset to opt-in to. 0 = No asset opt-in
    * @returns Newly generated account used by their card
    */
   public cardCreate(cardOwner: Account, asset: Asset): Account {
-    this.onlyOwner()
+    this.onlyPartner()
 
     const cardData: CardData = {
       owner: cardOwner,
@@ -368,11 +397,12 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
   }
 
   /**
-   * Close account. This permanently removes the rekey and deletes the account from the ledger
+   * Close account. This permanently removes the rekey and deletes the account from the ledger.
+   * Only the partner or the card holder can call this function.
    * @param card Address to close
    */
   public cardClose(card: Account): void {
-    assert(this.isOwner() || this.isCardOwner(card), 'SENDER_NOT_ALLOWED')
+    assert(this.isPartner() || this.isCardOwner(card), 'SENDER_NOT_ALLOWED')
 
     // Close the card account back to the contract, returning its balance to the
     // owner-funded pool. Deleting the box releases its MBR back to the contract too.
@@ -473,14 +503,15 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
   }
 
   /**
-   * Retrieves the omnibus address for the specified asset.
+   * Sets the partner address.
+   * Only the owner of the contract can call this method.
    *
-   * @param asset The ID of the asset.
-   * @returns The omnibus address for the asset.
+   * @param newPartnerAddress The new partner address to be set.
    */
-  @abimethod({ readonly: true })
-  public getOmnibusAddress(): Account {
-    return this.omnibus_address.value
+  public setPartnerAddress(newPartnerAddress: Account): void {
+    this.onlyOwner()
+
+    this.partner_address.value = newPartnerAddress
   }
 
   /**
@@ -497,14 +528,14 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
 
   // ===== Card Holder Methods =====
   /**
-   * Allows the card holder (or owner) to CloseOut of an asset, reducing the minimum balance
+   * Allows the card holder (or partner) to CloseOut of an asset, reducing the minimum balance
    * requirement of the account. The freed MBR remains within the card account.
    *
    * @param card - The address of the card.
    * @param asset - The ID of the asset to be removed.
    */
   public cardDisableAsset(card: Account, asset: Asset): void {
-    assert(this.isOwner() || this.isCardOwner(card), 'SENDER_NOT_ALLOWED')
+    assert(this.isPartner() || this.isCardOwner(card), 'SENDER_NOT_ALLOWED')
 
     this.cardAssetCloseOut(card, asset)
   }
@@ -517,7 +548,7 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
    */
   @abimethod({ allowActions: ['NoOp'] })
   public withdrawalRequest(card: Account, asset: Asset, amount: uint64): WithdrawalRequest {
-    assert(this.isCardOwner(card), 'SENDER_NOT_ALLOWED')
+    this.onlyCardOwner(card)
     const cardData = clone(this.cards(card).value)
     const [balance] = op.AssetHolding.assetBalance(card, asset)
     assert(amount <= balance, 'INSUFFICIENT_BALANCE')
@@ -543,7 +574,7 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
    * @param card Address to withdraw from
    */
   public withdrawalCancel(card: Account): void {
-    assert(this.isCardOwner(card), 'SENDER_NOT_ALLOWED')
+    this.onlyCardOwner(card)
     assert(this.withdrawals(Txn.sender).exists, 'WITHDRAWAL_REQUEST_NOT_FOUND')
     const withdrawal = clone(this.withdrawals(Txn.sender).value)
     this.withdrawals(Txn.sender).delete()
@@ -556,7 +587,7 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
    */
   @abimethod({ allowActions: ['NoOp'] })
   public withdraw(card: Account, amount: uint64): void {
-    assert(this.isCardOwner(card), 'SENDER_NOT_ALLOWED')
+    this.onlyCardOwner(card)
     assert(this.withdrawals(Txn.sender).exists, 'WITHDRAWAL_REQUEST_NOT_FOUND')
     const cardData = clone(this.cards(card).value)
     const withdrawal = clone(this.withdrawals(Txn.sender).value)
@@ -594,7 +625,7 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
     nonce: uint64,
     signature: bytes<64>,
   ): void {
-    assert(this.isCardOwner(card), 'SENDER_NOT_ALLOWED')
+    this.onlyCardOwner(card)
     const cardData = clone(this.cards(card).value)
 
     assert(Global.latestTimestamp < expiresAt, 'WITHDRAWAL_TIME_INVALID')
@@ -612,7 +643,7 @@ export class Main extends classes(Ownable, Pausable, Recoverable) {
 
     const withdrawal_hash = op.sha256(arc4.encodeArc4(withdrawal))
 
-    // Need at least 2000 Opcode budget
+    // Need at least 2500 Opcode budget
     ensureBudget(2500)
 
     assert(op.ed25519verifyBare(withdrawal_hash, signature, this.withdrawal_pubkey.value), 'SIGNATURE_INVALID')

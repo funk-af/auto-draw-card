@@ -16,7 +16,8 @@ Two auxiliary contracts support an automated draw ("AutoDraw") flow on top of th
 
 ## Roles
 
-- **Owner** — administers the contract: creates/closes/recovers cards, debits cards to the omnibus address, configures the contract (omnibus address, withdrawal timeout, withdrawal public key), and reclaims MBR. Inherited from `Ownable` and transferable via `transferOwnership`.
+- **Owner** — administers the contract: recovers cards, debits cards to the omnibus address, configures the contract (partner address, omnibus address, withdrawal timeout, withdrawal public key), and reclaims MBR. Inherited from `Ownable` and transferable via `transferOwnership`.
+- **Partner** — operates the card lifecycle: creates/closes cards and opts cards in/out of assets. Set by the owner via `setPartnerAddress`.
 - **Pauser** — can `pause`/`unpause` the contract, halting debits. Inherited from `Pausable` and updatable via `updatePauser`.
 - **Card holder** — the account assigned as a card's `owner`. Can close the card, opt the card out of assets, and initiate/cancel/execute withdrawals.
 
@@ -60,19 +61,27 @@ Owner-only. Set the number of seconds a permissionless withdrawal request must w
 
 Owner-only. Set the ed25519 public key used to authorize permissioned withdrawals.
 
-#### setOmnibusAddress(address)void / getOmnibusAddress()address
+#### setOmnibusAddress(address)void
 
-Owner-only setter / read the omnibus address that debited funds are sent to.
+Owner-only. Set the omnibus address that debited funds are sent to (readable via the `omnibus_address` global state).
+
+#### setPartnerAddress(address)void
+
+Owner-only. Set the partner address that operates the card lifecycle (readable via the `partner_address` global state).
 
 ### Cards
 
 #### cardCreate(address,uint64)address
 
-Owner-only. Generates a brand new rekeyed account for the given card holder and funds its minimum balance from the contract. If an asset is provided (non-zero), also funds the asset opt-in MBR and opts the card into that asset. Returns the new card address.
+Partner-only. Generates a brand new rekeyed account for the given card holder and funds its minimum balance from the contract. If an asset is provided (non-zero), also funds the asset opt-in MBR and opts the card into that asset. Returns the new card address.
+
+#### cardAssetOptIn(address,uint64)void
+
+Partner-only. Opts a card into an asset. The card's minimum balance requirement must be met prior to calling.
 
 #### cardClose(address)void
 
-Owner or card holder. Closes the card account back to the contract and deletes its box, returning all balances and MBR to the contract.
+Partner or card holder. Closes the card account back to the contract and deletes its box, returning all balances and MBR to the contract.
 
 #### cardRecover(address,address)void
 
@@ -80,7 +89,7 @@ Owner-only. Reassigns a card to a new card holder.
 
 #### cardDisableAsset(address,uint64)void
 
-Owner or card holder. Closes the card out of an asset; the freed MBR stays within the card account.
+Partner or card holder. Closes the card out of an asset; the freed MBR stays within the card account.
 
 #### getCardData(address)(address,address,uint64,uint64)
 
@@ -92,9 +101,9 @@ Read a card's debit nonce. (The withdrawal nonce is available via `getCardData`.
 
 ### Debits
 
-#### cardDebit(address,uint64,uint64,uint64,string)void
+#### cardDebit(address,address,uint64,uint64,uint64,string)void
 
-Owner-only, when not paused. Debits an amount of an asset from a card directly to the omnibus address. Args: `card, asset, amount, nonce, reference`. The reference is attached as the transfer note and the card's debit nonce is incremented.
+Owner-only, when not paused. Debits an amount of an asset from a card directly to the omnibus address. Args: `cardOwner, card, asset, amount, nonce, reference`. Asserts `cardOwner` owns `card` (the guard the AutoDraw flow relies on), attaches the reference as the transfer note, and increments the card's debit nonce.
 
 ### Withdrawals
 
@@ -116,9 +125,9 @@ Card holder. Executes a withdrawal before the wait time elapses, authorized by a
 
 ## Killswitch contract
 
-A standalone application ([smart_contracts/killswitch/contract.algo.ts](./smart_contracts/killswitch/contract.algo.ts)) that maintains an opt-in registry of accounts allowed to use the AutoDraw delegation. It lets a card holder enable AutoDraw and, crucially, disable ("kill") it at any time. It inherits `Ownable`, `Pausable` and `Recoverable`, so it also supports `transferOwnership`, `pause`/`unpause`/`updatePauser`, and `recoverAsset`.
+A standalone application ([smart_contracts/killswitch/contract.algo.ts](./smart_contracts/killswitch/contract.algo.ts)) that maintains an opt-in registry of `(account, asset)` pairs allowed to use the AutoDraw delegation. It lets a card holder enable AutoDraw per asset and, crucially, disable ("kill") it at any time. It inherits `Ownable`, `Pausable` and `Recoverable`, so it also supports `transferOwnership`, `pause`/`unpause`/`updatePauser`, and `recoverAsset`.
 
-Each enabled account is stored in an `accounts` box (MBR owner-funded); enabling is gated by Main card ownership to prevent abuse of that box MBR. The Main application it verifies against is set at deploy time.
+Each enabled delegation is stored in a box keyed by the 32-byte account address concatenated with the 8-byte asset id (MBR owner-funded); enabling is gated by Main card ownership to prevent abuse of that box MBR. The Main application it verifies against is set at deploy time.
 
 ### Methods
 
@@ -126,27 +135,27 @@ Each enabled account is stored in an `accounts` box (MBR owner-funded); enabling
 
 Deploy the contract, setting the first address as the owner and the `uint64` as the Main application ID used to verify card ownership. The transaction sender becomes the initial pauser. Returns the contract application address.
 
-#### enable(address)void
+#### enable(address,uint64)void
 
-Opt the caller in to AutoDraw delegation. The caller must pass a `card` address they own; ownership is verified via a cross-contract `getCardData` call to the Main contract. Fails if already enabled or if the caller does not own the card. Creates the caller's `accounts` box.
+Opt the caller in to AutoDraw delegation of the given asset. The caller must pass a `card` address they own; ownership is verified via a cross-contract `getCardData` call to the Main contract. Fails if already enabled for that asset or if the caller does not own the card. Creates the caller's `(account, asset)` box.
 
-#### kill()void
+#### kill(uint64)void
 
-Opt the caller out of AutoDraw delegation, deleting their `accounts` box. Fails if not currently enabled.
+Opt the caller out of AutoDraw delegation of the given asset, deleting their `(account, asset)` box. Fails if not currently enabled for that asset.
 
-#### authorize(address,address)void
+#### authorize(address,uint64)void
 
-When not paused, asserts that the given `account` has AutoDraw enabled (`REFUSED` otherwise) and that `account` owns the given `card` — ownership is verified via a cross-contract `getCardData` call to the Main contract (`NOT_CARD_OWNER` otherwise). Called as part of the AutoDraw transaction group to confirm delegation is still active and that funds are being drawn into a card the delegator owns; pausing the contract or the account calling `kill()` halts further draws.
+When not paused, asserts that the given `account` has AutoDraw enabled for the given `asset` (`REFUSED` otherwise). Called as part of the AutoDraw transaction group to confirm delegation is still active; pausing the contract or the account calling `kill()` halts further draws.
 
 ## AutoDraw logic signature
 
-A delegated `LogicSig` ([smart_contracts/auto_draw/contract.algo.ts](./smart_contracts/auto_draw/contract.algo.ts)) that authorizes an automatic debit ("draw") of a single asset from a card. It is parameterized with template variables `ASSET`, `GENESIS_HASH`, `KILLSWITCH_APP` and `MAIN_APP`, and only approves a transaction that satisfies all of the following:
+A delegated `LogicSig` ([smart_contracts/auto_draw/contract.algo.ts](./smart_contracts/auto_draw/contract.algo.ts)) that authorizes an automatic debit ("draw") of an asset from the delegating account. It is parameterized with template variables `GENESIS_HASH`, `KILLSWITCH_APP` and `MAIN_APP`, and only approves a transaction that satisfies all of the following:
 
-- It is a fee-0 asset transfer of `ASSET`, with no rekey and no asset close-out, on the expected network (`GENESIS_HASH`).
-- The next transaction (group index +1) is a `Killswitch.authorize` call to `KILLSWITCH_APP` whose `account` argument matches the transfer sender and whose `card` argument matches the transfer's receiver.
-- The transaction after that (group index +2) is a `Main.cardDebit` call to `MAIN_APP` whose `card`, `asset` and `amount` arguments match the transfer's receiver, asset and (as an upper bound) amount.
+- It is a fee-0 asset transfer, with no rekey and no asset close-out, on the expected network (`GENESIS_HASH`).
+- The next transaction (group index +1) is a `Killswitch.authorize` call to `KILLSWITCH_APP` whose `account` argument matches the transfer sender and whose `asset` argument matches the transferred asset.
+- The transaction after that (group index +2) is a `Main.cardDebit` call to `MAIN_APP` whose `cardOwner`, `card`, `asset` and `amount` arguments match the transfer's sender, receiver, asset and (as an upper bound) amount.
 
-This enforces that an automated draw can only happen alongside an active Killswitch authorization and a matching Main debit, that the drawn amount never exceeds the debited amount, and — because `authorize` verifies the card is owned by the sender — that funds can only ever flow into a card the delegator owns rather than any card the Main contract happens to debit.
+This enforces that an automated draw can only happen alongside an active per-asset Killswitch authorization and a matching Main debit, that the drawn amount never exceeds the debited amount, and — because `cardDebit` verifies `cardOwner` owns `card` — that funds can only ever flow into a card the delegator owns rather than any card the Main contract happens to debit. The asset is not baked into the Lsig itself: which assets may be drawn is controlled by the per-`(account, asset)` Killswitch delegation.
 
 ## Contract diagram
 
@@ -157,10 +166,12 @@ classDiagram
     MainContract : +int cards_active_count
     MainContract : +int withdrawal_wait_time
     MainContract : +bytes withdrawal_pubkey
+    MainContract : +address partner_address
     MainContract : +address omnibus_address
     MainContract : deploy()
 
     MainContract <|-- Owner
+    MainContract <|-- Partner
     MainContract <|-- CardHolder
 
     class Owner {
@@ -173,11 +184,16 @@ classDiagram
         setWithdrawalTimeout()
         setWithdrawalPubkey()
         setOmnibusAddress()
-        cardCreate()
-        cardClose()
+        setPartnerAddress()
         cardRecover()
-        cardDisableAsset()
         cardDebit()
+    }
+
+    class Partner {
+        cardCreate()
+        cardAssetOptIn()
+        cardClose()
+        cardDisableAsset()
     }
 
     class CardHolder {
@@ -200,6 +216,7 @@ sequenceDiagram
     actor User
     actor Partner
     Partner->>Contract: deploy(owner, omnibus)
+    Partner->>Contract: setPartnerAddress()
     Partner->>Contract: setWithdrawalTimeout()
     Partner->>Contract: fund MBR pool
     Partner->>Contract: cardCreate(cardHolder, asset)

@@ -103,8 +103,7 @@
       ]
     },
     "28": {
-      "error": "OnCompletion must be DeleteApplication && can only call when creating",
-      "op": "assert // OnCompletion must be DeleteApplication && can only call when creating",
+      "op": "assert",
       "stack_out": []
     },
     "29": {

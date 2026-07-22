@@ -142,17 +142,42 @@ describe('Auto-Draw Card', () => {
   })
 
   /**
+   * Registers the partner address that operates the card lifecycle. Partner-gated
+   * methods (`cardCreate`, `cardAssetOptIn`, `cardClose`, `cardDisableAsset`) read this
+   * global state, so it must be set before any card is created. The owner account
+   * doubles as the partner for the rest of the suite.
+   */
+  test('Set partner address', async () => {
+    const result = await appClient.send.setPartnerAddress({
+      args: { newPartnerAddress: owner.addr.toString() },
+    })
+
+    expect(result.confirmation.poolError).toBe('')
+    expect(await appClient.state.global.partnerAddress()).toBe(owner.addr.toString())
+  })
+
+  /**
+   * Negative case for the partner gate: only the owner can rotate the partner address,
+   * so a random account is rejected with the Ownable error.
+   */
+  test('setPartnerAddress fails for non-owner', async () => {
+    await expect(
+      appClient.send.setPartnerAddress({
+        args: { newPartnerAddress: user2.addr.toString() },
+        sender: user2.addr,
+      }),
+    ).rejects.toThrow()
+  })
+
+  /**
    * Confirms the omnibus settlement address is persisted from the deploy arguments.
    * The omnibus account is where debited card funds ultimately settle, so it must be
    * readable on-chain immediately after creation.
    */
   test('Omnibus address set at deploy', async () => {
-    const result = await appClient.send.getOmnibusAddress({
-      args: {},
-      staticFee: AlgoAmount.MicroAlgos(1_000),
-    })
+    const result = await appClient.state.global.omnibusAddress()
 
-    expect(result.return).toBe(omnibus.addr.toString())
+    expect(result).toBe(omnibus.addr.toString())
   })
 
   /**
@@ -167,11 +192,7 @@ describe('Auto-Draw Card', () => {
     })
     expect(updated.confirmation.poolError).toBe('')
 
-    const afterUpdate = await appClient.send.getOmnibusAddress({
-      args: {},
-      staticFee: AlgoAmount.MicroAlgos(1_000),
-    })
-    expect(afterUpdate.return).toBe(circle.addr.toString())
+    expect(await appClient.state.global.omnibusAddress()).toBe(circle.addr.toString())
 
     // Restore so the debit flow settles into the opted-in omnibus account
     const restored = await appClient.send.setOmnibusAddress({
@@ -204,6 +225,23 @@ describe('Auto-Draw Card', () => {
     })
 
     expect(recover.confirmation.poolError).toBe('')
+  })
+
+  /**
+   * Negative case for the partner gate on card creation: an account that is not the
+   * partner cannot mint cards, reverting with SENDER_NOT_ALLOWED.
+   */
+  test('cardCreate fails when called by non-partner', async () => {
+    await expect(
+      appClient.send.cardCreate({
+        args: {
+          cardOwner: user2.addr.toString(),
+          asset: 0,
+        },
+        sender: user2.addr,
+        staticFee: AlgoAmount.MicroAlgos(4_000),
+      }),
+    ).rejects.toThrow('SENDER_NOT_ALLOWED')
   })
 
   /**
@@ -545,13 +583,14 @@ describe('Auto-Draw Card', () => {
   })
 
   /**
-   * The card owner enables delegation for their own card, writing a local/box switch that
-   * later authorizes automated draws. This is the opt-in step a user takes to allow
-   * AutoDraw to pull funds on their behalf.
+   * The card owner enables delegation of FakeUSDC, writing a per-(account, asset) box
+   * switch that later authorizes automated draws. This is the opt-in step a user takes to
+   * allow AutoDraw to pull that asset on their behalf; the card address only proves card
+   * ownership.
    */
   test('Killswitch: enable user', async () => {
     const result = await ksClient.send.enable({
-      args: { card: autoDrawCardAddress },
+      args: { card: autoDrawCardAddress, asset: fakeUSDC },
       sender: user.addr,
       staticFee: AlgoAmount.MicroAlgos(2_000),
     })
@@ -559,14 +598,14 @@ describe('Auto-Draw Card', () => {
   })
 
   /**
-   * Negative case: a non-owner cannot enable delegation on someone else's card. Enforces
-   * that only the card owner can opt their card into the killswitch, reverting with
-   * NOT_CARD_OWNER otherwise.
+   * Negative case: a non-owner cannot enable delegation using someone else's card as
+   * ownership proof. Enforces that only the card owner can opt into the killswitch,
+   * reverting with NOT_CARD_OWNER otherwise.
    */
   test('Killswitch: enable fails for account that does not own the card', async () => {
     await expect(
       ksClient.send.enable({
-        args: { card: autoDrawCardAddress },
+        args: { card: autoDrawCardAddress, asset: fakeUSDC },
         sender: user2.addr,
         staticFee: AlgoAmount.MicroAlgos(2_000),
       }),
@@ -574,55 +613,68 @@ describe('Auto-Draw Card', () => {
   })
 
   /**
-   * Happy path for the killswitch gate: an enabled user passes `authorize`, the check the
-   * AutoDraw group relies on to confirm the user still consents to automated debits.
+   * Happy path for the killswitch gate: an enabled user passes `authorize` for the enabled
+   * asset, the check the AutoDraw group relies on to confirm the user still consents to
+   * automated debits.
    */
   test('Killswitch: authorize enabled user succeeds', async () => {
     const result = await ksClient.send.authorize({
-      args: { account: user.addr.toString() },
+      args: { account: user.addr.toString(), asset: fakeUSDC },
       staticFee: AlgoAmount.MicroAlgos(1_000),
     })
     expect(result.confirmation.poolError).toBe('')
   })
 
   /**
-   * The killswitch in action: once a user calls `kill`, their consent is revoked and
-   * `authorize` reverts with REFUSED. This is the emergency off-switch that lets a user
-   * instantly stop any further automated draws.
+   * Delegation is scoped per asset: enabling FakeUSDC does not authorize draws of any
+   * other asset, so `authorize` for a different asset id is refused.
    */
-  test('Killswitch: user kills their delegation — authorize fails with REFUSED', async () => {
-    await ksClient.send.kill({ args: [], sender: user.addr })
-
-    await expect(ksClient.send.authorize({ args: { account: user.addr.toString() } })).rejects.toThrow('REFUSED')
+  test('Killswitch: authorize enabled user for another asset fails with REFUSED', async () => {
+    await expect(
+      ksClient.send.authorize({ args: { account: user.addr.toString(), asset: fakeUSDC + 1n } }),
+    ).rejects.toThrow('REFUSED')
   })
 
   /**
-   * Confirms the kill is reversible: a user can re-enable their card after killing and
+   * The killswitch in action: once a user calls `kill` for the asset, their consent is
+   * revoked and `authorize` reverts with REFUSED. This is the emergency off-switch that
+   * lets a user instantly stop any further automated draws.
+   */
+  test('Killswitch: user kills their delegation — authorize fails with REFUSED', async () => {
+    await ksClient.send.kill({ args: { asset: fakeUSDC }, sender: user.addr })
+
+    await expect(ksClient.send.authorize({ args: { account: user.addr.toString(), asset: fakeUSDC } })).rejects.toThrow(
+      'REFUSED',
+    )
+  })
+
+  /**
+   * Confirms the kill is reversible: a user can re-enable the asset after killing and
    * `authorize` succeeds again, so the off-switch is a pause rather than a permanent
    * lockout.
    */
   test('Killswitch: user re-enables themselves — authorize succeeds', async () => {
     await ksClient.send.enable({
-      args: { card: autoDrawCardAddress },
+      args: { card: autoDrawCardAddress, asset: fakeUSDC },
       sender: user.addr,
       staticFee: AlgoAmount.MicroAlgos(2_000),
     })
 
     const result = await ksClient.send.authorize({
-      args: { account: user.addr.toString() },
+      args: { account: user.addr.toString(), asset: fakeUSDC },
       staticFee: AlgoAmount.MicroAlgos(1_000),
     })
     expect(result.confirmation.poolError).toBe('')
   })
 
   /**
-   * Idempotency guard: enabling a card that is already enabled reverts with
-   * ALREADY_ENABLED, preventing duplicate box state or double-charged MBR.
+   * Idempotency guard: enabling an (account, asset) pair that is already enabled reverts
+   * with ALREADY_ENABLED, preventing duplicate box state or double-charged MBR.
    */
   test('Killswitch: enabling again fails with ALREADY_ENABLED', async () => {
     await expect(
       ksClient.send.enable({
-        args: { card: autoDrawCardAddress },
+        args: { card: autoDrawCardAddress, asset: fakeUSDC },
         sender: user.addr,
         staticFee: AlgoAmount.MicroAlgos(2_000),
       }),
@@ -634,7 +686,9 @@ describe('Auto-Draw Card', () => {
    * users who explicitly enabled delegation can be authorized.
    */
   test('Killswitch: authorize non-enabled account fails with REFUSED', async () => {
-    await expect(ksClient.send.authorize({ args: { account: user2.addr.toString() } })).rejects.toThrow('REFUSED')
+    await expect(
+      ksClient.send.authorize({ args: { account: user2.addr.toString(), asset: fakeUSDC } }),
+    ).rejects.toThrow('REFUSED')
   })
 
   /**
@@ -645,7 +699,9 @@ describe('Auto-Draw Card', () => {
   test('Killswitch: pause contract — authorize fails', async () => {
     await ksClient.send.pause({ args: [] })
 
-    await expect(ksClient.send.authorize({ args: { account: user.addr.toString() } })).rejects.toThrow()
+    await expect(
+      ksClient.send.authorize({ args: { account: user.addr.toString(), asset: fakeUSDC } }),
+    ).rejects.toThrow()
   })
 
   /**
@@ -656,7 +712,7 @@ describe('Auto-Draw Card', () => {
     await ksClient.send.unpause({ args: [] })
 
     const result = await ksClient.send.authorize({
-      args: { account: user.addr.toString() },
+      args: { account: user.addr.toString(), asset: fakeUSDC },
       staticFee: AlgoAmount.MicroAlgos(1_000),
     })
     expect(result.confirmation.poolError).toBe('')
@@ -666,10 +722,11 @@ describe('Auto-Draw Card', () => {
 
   /**
    * Builds the AutoDraw delegated logic signature. The TEAL template is hydrated with the
-   * concrete asset id, killswitch app id, main app id, and genesis hash, compiled, then
-   * signed by the user so it acts as a delegated approval. The lsig can only ever move the
-   * configured asset into the configured card under the configured apps, which is what
-   * makes delegating it to Partner safe.
+   * concrete killswitch app id, main app id, and genesis hash, compiled, then signed by
+   * the user so it acts as a delegated approval. The lsig no longer pins an asset id
+   * itself — the transferred asset is bound to the per-(account, asset) killswitch
+   * delegation via `authorize`'s asset argument, which is what makes delegating it to
+   * Partner safe.
    */
   test('AutoDraw: compile lsig and user signs for delegation', async () => {
     const { algorand } = fixture.context
@@ -680,7 +737,6 @@ describe('Auto-Draw Card', () => {
 
     const tealTemplate = readFileSync(join(testDir, '../artifacts/auto_draw/AutoDraw.teal'), 'utf-8')
     const teal = tealTemplate
-      .replace('TMPL_ASSET', String(fakeUSDC))
       .replace('TMPL_KILLSWITCH_APP', String(ksClient.appId))
       .replace('TMPL_MAIN_APP', String(appClient.appId))
       .replace('TMPL_GENESIS_HASH', `0x${genesisHashHex}`)
@@ -721,10 +777,10 @@ describe('Auto-Draw Card', () => {
     const composer = algorand.newGroup()
     // [0] AutoDraw lsig axfer: user's main account → card (fee=0)
     composer.addTransaction(axferTxn, algosdk.makeLogicSigAccountTransactionSigner(autoDrawLsig))
-    // [1] Killswitch.authorize: validates user's switches and paused state
+    // [1] Killswitch.authorize: validates user's per-asset switch and paused state
     composer.addAppCallMethodCall(
       await ksClient.params.authorize({
-        args: { account: user.addr.toString() },
+        args: { account: user.addr.toString(), asset: fakeUSDC },
         staticFee: AlgoAmount.MicroAlgos(1_000),
       }),
     )
@@ -768,7 +824,7 @@ describe('Auto-Draw Card', () => {
     const { algorand } = fixture.context
     const algod = algorand.client.algod
 
-    await ksClient.send.kill({ args: [], sender: user.addr })
+    await ksClient.send.kill({ args: { asset: fakeUSDC }, sender: user.addr })
 
     const nonceResult = await appClient.send.getNextCardNonce({
       args: { card: autoDrawCardAddress },
@@ -787,7 +843,7 @@ describe('Auto-Draw Card', () => {
     composer.addTransaction(axferTxn, algosdk.makeLogicSigAccountTransactionSigner(autoDrawLsig))
     composer.addAppCallMethodCall(
       await ksClient.params.authorize({
-        args: { account: user.addr.toString() },
+        args: { account: user.addr.toString(), asset: fakeUSDC },
         staticFee: AlgoAmount.MicroAlgos(1_000),
       }),
     )
@@ -808,7 +864,7 @@ describe('Auto-Draw Card', () => {
     await expect(composer.send()).rejects.toThrow('REFUSED')
 
     await ksClient.send.enable({
-      args: { card: autoDrawCardAddress },
+      args: { card: autoDrawCardAddress, asset: fakeUSDC },
       sender: user.addr,
       staticFee: AlgoAmount.MicroAlgos(2_000),
     })
@@ -842,7 +898,7 @@ describe('Auto-Draw Card', () => {
     composer.addTransaction(axferTxn, algosdk.makeLogicSigAccountTransactionSigner(autoDrawLsig))
     composer.addAppCallMethodCall(
       await ksClient.params.authorize({
-        args: { account: user.addr.toString() },
+        args: { account: user.addr.toString(), asset: fakeUSDC },
         staticFee: AlgoAmount.MicroAlgos(1_000),
       }),
     )

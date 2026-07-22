@@ -26,16 +26,15 @@ import {
   Application,
   arc4,
   assert,
-  Asset,
   bytes,
   Global,
   gtxn,
   LogicSig,
   OnCompleteAction,
-  op,
   TemplateVar,
   Txn,
 } from '@algorandfoundation/algorand-typescript'
+import { btoi } from '@algorandfoundation/algorand-typescript/op'
 import { Killswitch } from '../killswitch/contract.algo'
 import { Main } from '../main/contract.algo'
 
@@ -68,10 +67,6 @@ function autoDrawAsserts(txnAutoDraw: gtxn.AssetTransferTxn) {
   // template variable, so a signature valid on (e.g.) TestNet cannot be replayed
   // against the same account on MainNet or any other chain.
   assert(Global.genesisHash === TemplateVar<bytes>('GENESIS_HASH'), 'BAD_NETWORK')
-  // Restrict to the intended asset: the Lsig only ever authorizes transfers of
-  // the single asset it was templated for, preventing it from being abused to
-  // move any other ASA held by the account.
-  assert(txnAutoDraw.xferAsset === TemplateVar<Asset>('ASSET'), 'BAD_ASSET')
   // Require a zero fee: the signer must not let this Lsig spend the account's
   // Algo balance on fees. The fee is expected to be covered by another (fee-pooling)
   // transaction in the group, so this transaction itself must contribute nothing.
@@ -105,6 +100,12 @@ function killswitchAsserts(txnAutoDraw: gtxn.AssetTransferTxn) {
   // is evaluated against the correct holder and cannot be authorized on someone
   // else's behalf.
   assert(txnKillswitch.appArgs(1) === txnAutoDraw.sender.bytes, 'AUTH_MISMATCH')
+  // Tie the authorization to the transferred asset: appArgs(2) is the asset id passed
+  // to authorize (decoded from bytes), and it must equal the asset actually moved.
+  // Delegation is enabled per (account, asset) in the Killswitch, so this check —
+  // rather than an asset baked into the Lsig template — is what restricts which ASA
+  // the Lsig may transfer.
+  assert(btoi(txnKillswitch.appArgs(2)) === txnAutoDraw.xferAsset.id, 'ASSET_MISMATCH_KILLSWITCH')
 }
 
 function mainDebitAsserts(txnAutoDraw: gtxn.AssetTransferTxn) {
@@ -137,9 +138,9 @@ function mainDebitAsserts(txnAutoDraw: gtxn.AssetTransferTxn) {
   // Cross-check the asset: the asset id passed to cardDebit (appArgs(3), decoded from
   // bytes) must equal the asset actually transferred, so the debit is recorded against
   // the correct ASA.
-  assert(op.btoi(txnMainDebit.appArgs(3)) === txnAutoDraw.xferAsset.id, 'ASSET_MISMATCH')
+  assert(btoi(txnMainDebit.appArgs(3)) === txnAutoDraw.xferAsset.id, 'ASSET_MISMATCH_MAIN')
   // Bound the transfer by the debited amount: the amount authorized in cardDebit
   // (appArgs(4)) must be at least the amount actually transferred, ensuring the asset
   // movement never exceeds what Main has accounted/approved (a smaller transfer is fine).
-  assert(op.btoi(txnMainDebit.appArgs(4)) >= txnAutoDraw.assetAmount, 'BAD_AMOUNT')
+  assert(btoi(txnMainDebit.appArgs(4)) >= txnAutoDraw.assetAmount, 'BAD_AMOUNT')
 }
