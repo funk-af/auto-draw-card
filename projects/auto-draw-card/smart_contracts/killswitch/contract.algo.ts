@@ -29,20 +29,23 @@ import {
   arc4,
   assert,
   Asset,
+  BoxMap,
   bytes,
   Global,
   GlobalState,
   Txn,
 } from '@algorandfoundation/algorand-typescript'
-import { Box, itob } from '@algorandfoundation/algorand-typescript/op'
 import { classes } from 'polytype'
 import type { Main } from '../main/contract.algo'
 import { Ownable } from '../roles/ownable.algo'
 import { Pausable } from '../roles/pausable.algo'
 import { Recoverable } from '../roles/recoverable.algo'
 
+type AccountAssetKey = [Account, Asset]
+
 export class Killswitch extends classes(Ownable, Pausable, Recoverable) {
   // ========== Storage ==========
+  public accountAssetPairs = BoxMap<AccountAssetKey, bytes<0>>({ keyPrefix: '' })
 
   // The Main card-management contract, used to verify card ownership before enabling.
   public main_app = GlobalState<Application>({ key: 'ma' })
@@ -70,10 +73,8 @@ export class Killswitch extends classes(Ownable, Pausable, Recoverable) {
    * @param asset The asset the delegation must be enabled for.
    */
   public authorize(account: Account, asset: Asset): void {
-    const key = this.accountAssetKey(account, asset)
-    const [, exists] = Box.get(key)
     this.whenNotPaused()
-    assert(exists, 'REFUSED')
+    assert(this.accountAssetPairs([account, asset]).exists, 'REFUSED')
   }
 
   /**
@@ -90,9 +91,8 @@ export class Killswitch extends classes(Ownable, Pausable, Recoverable) {
    * @param asset The asset to enable delegation for.
    */
   public enable(card: Account, asset: Asset): void {
-    const key = this.accountAssetKey(Txn.sender, asset)
-    const [, exists] = Box.get(key)
-    assert(!exists, 'ALREADY_ENABLED')
+    const key = [Txn.sender, asset] as AccountAssetKey
+    assert(!this.accountAssetPairs(key).exists, 'ALREADY_ENABLED')
 
     const cardData = arc4.abiCall<typeof Main.prototype.getCardData>({
       appId: this.main_app.value,
@@ -100,7 +100,7 @@ export class Killswitch extends classes(Ownable, Pausable, Recoverable) {
     }).returnValue
     assert(cardData.owner === Txn.sender, 'NOT_CARD_OWNER')
 
-    Box.create(key, 0)
+    this.accountAssetPairs(key).create({ size: 0 })
   }
 
   /**
@@ -109,17 +109,8 @@ export class Killswitch extends classes(Ownable, Pausable, Recoverable) {
    * @param asset The asset to disable delegation for.
    */
   public kill(asset: Asset): void {
-    const key = this.accountAssetKey(Txn.sender, asset)
-    const [, exists] = Box.get(key)
-    assert(exists, 'ALREADY_DISABLED')
-    Box.delete(key)
-  }
-
-  /**
-   * Box key for an (account, asset) delegation: the 32-byte account address
-   * concatenated with the 8-byte big-endian asset id.
-   */
-  private accountAssetKey(account: Account, asset: Asset): bytes {
-    return account.bytes.concat(itob(asset.id))
+    const key = [Txn.sender, asset] as AccountAssetKey
+    assert(this.accountAssetPairs(key).exists, 'ALREADY_DISABLED')
+    this.accountAssetPairs(key).delete()
   }
 }
